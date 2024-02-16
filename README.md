@@ -8,9 +8,11 @@ An application that shows current weather from API by city name or location
 
 ## Problem Statement
 
-- Create a website following the design and filter of the countries with using of DOM and Event in JS.
+- Create an app following the design and display wcurrent weather infos of the cities with using of DOM and Event in JS.
 
 ## Outcome
+
+![weather_app_v2](https://github.com/omrfrkcpr/Weather_App_v2/assets/77440899/3104b4d0-ca9b-4243-8394-6eb13ca548bf)
 
 ## Project Skeleton
 
