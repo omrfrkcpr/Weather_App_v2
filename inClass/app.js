@@ -2,17 +2,25 @@
 const form = document.querySelector("form");
 const input = document.querySelector("form input");
 const cardContainer = document.getElementById("card-container");
-const alertMessage = document.querySelector("#alert");
-const engLi = document.querySelector("#eng");
-const deLi = document.querySelector("#de");
+const alertMessage = document.getElementById("alert");
+const searchButton = document.getElementById("search");
 
 //! Variables
-
 const apiKey = "19fadf383f77445c7ead85a8d7ccce88";
 let url; //Api isteği için kullanılacak
 let cities = []; // Sergilenen şehirlerin isimleri tutulacak
 let units = "metric"; // fahrenheit için 'imperial' yazılmalı
 let lang = "en"; //Almanca için 'de' yazılacak
+
+//& Location find
+const locate = document.getElementById("locate");
+const userLocationDiv = document.getElementById("userLocation");
+let userLocation = false;
+const clockDiv = document.querySelector("#clock");
+
+//& Language
+
+const langButton = document.querySelector(".language");
 
 //! Event listeners
 
@@ -24,31 +32,76 @@ form.addEventListener("submit", (e) => {
     const city = input.value;
     url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${units}&lang=${lang}&appid=${apiKey}`;
     // console.log(url)
+
     getWeatherData();
   }
 
   form.reset(); // formu sıfırlar
 });
 
+locate.addEventListener("click", () => {
+  navigator.geolocation?.getCurrentPosition(({ coords }) => {
+    // console.log(coords)
+
+    const { latitude, longitude } = coords;
+
+    url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=${units}&lang=${lang}&appid=${apiKey}`;
+    userLocation = true;
+
+    clockDiv.classList.replace("d-none", "d-block");
+
+    getWeatherData();
+  });
+});
+
+langButton.addEventListener("click", (e) => {
+  // console.log(e.target.textContent)
+
+  if (e.target.textContent == "DE") {
+    input.setAttribute("placeholder", "Suche nach einer Stadt");
+    lang = "de";
+  } else if (e.target.textContent == "EN") {
+    input.setAttribute("placeholder", "Search for a city");
+    lang = "en";
+  }
+});
+
+searchButton.addEventListener("click", (e) => {
+  e.preventDefault(); // Default özelliği kullanma yani submit etme
+  // console.log(city)
+
+  if (input.value) {
+    const city = input.value;
+    url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${units}&lang=${lang}&appid=${apiKey}`;
+
+    console.log(userLocationDiv.textContent);
+    getWeatherData();
+  }
+
+  input.value = ""; // formu sıfırlar
+});
+
 //^ Functions
 
 const getWeatherData = async () => {
   try {
-    const response = await fetch(url).then((response) => response.json()); //& fetch ile
+    // const response = await fetch(url).then((response) => response.json()) //& fetch ile
 
-    // console.log(response) // Api den gelen veri
+    const response = await axios(url); //^ Axios ile istek atma
+
+    console.log(response); // Api den gelen veri
 
     //? Data destructure
+    // const {main, name, weather, sys} = response //& fetch
+    const { main, name, weather, sys } = response.data; //^ axios
 
-    const { main, name, weather, sys } = response; //& fetch
-
-    // console.log(weather[0].icon)
-    // const iconUrl = `https://openweathermap.org/img/wn/${weather[0].icon}@2x.png`; //^ png format
-    const iconUrl = `https://s3-us-west-2.amazonaws.com/s.cdpn.io/162656/${weather[0].icon}.svg`; //^ svg format
+    // const iconUrl = `https://openweathermap.org/img/wn/${weather[0].icon}@2x.png` //^ openweathermap.org
+    const iconUrl = `https://s3-us-west-2.amazonaws.com/s.cdpn.io/162656/${weather[0].icon}.svg`; //^ alternatif
 
     if (cities.indexOf(name) == -1) {
       cities.unshift(name);
-      console.log(cities);
+      // console.log(cities)
+
       let card = `       <div class="col" id="${name}">
     <div class="card mb-4 rounded-3 shadow-sm">
             <ul class="list-unstyled mt-2 mb-4">
@@ -58,13 +111,13 @@ const getWeatherData = async () => {
       }/shiny/24.png" class="rounded-circle" alt=${
         sys.country
       }/> </sup></span></h4>
-                <h1 class="card-title pricing-card-title"><i class="bi bi-thermometer-half"></i> ${main.temp.toFixed(
-                  0
+                <h1 class="card-title pricing-card-title"><i class="bi bi-thermometer-half"></i> ${Math.round(
+                  main.temp
                 )}<sup>°C</sup></h1>
-                <h6 class="card-title pricing-card-title">Min : ${main.temp_min.toFixed(
-                  0
-                )}<sup>°C</sup> - Max : ${main.temp_max.toFixed(
-        0
+                <h6 class="card-title pricing-card-title">Min : ${Math.round(
+                  main.temp_min
+                )}<sup>°C</sup> - Max : ${Math.round(
+        main.temp_max
       )}<sup>°C</sup>  </h6>
                 <h6 class="card-title pricing-card-title"><img src="./assets/wi-barometer.svg" height="30px"/>${
                   main.pressure
@@ -77,41 +130,60 @@ const getWeatherData = async () => {
     </div>
     </div>`;
 
-      cardContainer.innerHTML = card + cardContainer.innerHTML;
+      if (userLocation) {
+        userLocationDiv.innerHTML = card;
+        userLocation = false;
+      } else {
+        cardContainer.innerHTML = card + cardContainer.innerHTML;
+      }
+      console.log(cities);
+      //! Remove Cities
+
+      const singleClearButton = document.querySelectorAll(".bi-x-circle");
+
+      singleClearButton.forEach((button) => {
+        button.addEventListener("click", (e) => {
+          // console.log(e.target.closest(".col").id)
+
+          // cities.splice(cities.indexOf(e.target.closest(".col").id), 1); //! Development aşamasında
+
+          delete cities[cities.indexOf(e.target.closest(".col").id)]; //! Array den siler
+
+          if (e.target.closest(".col-md-3")) {
+            const closestCol3 = e.target.closest(".col-md-3");
+            const clockElement = closestCol3.querySelector("#clock");
+            if (clockElement && clockElement.classList.contains("d-block")) {
+              clockElement.classList.replace("d-block", "d-none");
+            }
+          }
+
+          e.target.closest(".col").remove(); //! Dom'dan siler
+        });
+      });
     } else {
-      alertMessage.textContent = `You already know the weather for ${name}, Please search for another city 😉`;
-      alertMessage.classList.remove("d-none");
+      if (lang == "de") {
+        alertMessage.textContent = `Sie kennen das Wetter für die ${name} bereits. Bitte suchen Sie nach einer anderen Stadt 😉`;
+      } else {
+        alertMessage.textContent = `You already know the weather for ${name}, Please search for another city 😉`;
+      }
+      alertMessage.classList.replace("d-none", "d-block");
+
       setTimeout(() => {
-        alertMessage.classList.add("d-none");
+        alertMessage.classList.replace("d-block", "d-none");
       }, 3000);
     }
-
-    //! Remove Cities
-    const singleClearButton = document.querySelectorAll(".bi-x-circle");
-
-    singleClearButton.forEach((button) => {
-      button.addEventListener("click", (e) => {
-        const removeCard = e.target.closest(".col");
-        removeCard.remove();
-
-        delete cities[cities.indexOf(removeCard.id)];
-
-        //^ Alternative
-        // const indexToRemove = cities.findIndex((city) => city === removeCard.id);
-        // if (indexToRemove !== -1) {
-        //   // Using splice to remove the element from the array
-        //   cities.splice(indexToRemove, 1);
-        //   //   console.log(cities); // testing
-        //   // OR using slice to create a new array without the removed element
-        //   // cities = cities.slice(0, indexToRemove).concat(cities.slice(indexToRemove + 1));
-        // }
-      });
-    });
   } catch (error) {
-    alertMessage.textContent = "Oppps. City Not Found!";
-    alertMessage.classList.remove("d-none");
+    if (lang == "de") {
+      alertMessage.textContent = `Stadt nicht gefunden`;
+    } else {
+      alertMessage.textContent = `City Not Found!`;
+    }
+
+    alertMessage.classList.replace("d-none", "d-block");
+
     setTimeout(() => {
-      alertMessage.classList.add("d-none");
+      alertMessage.classList.replace("d-block", "d-none");
     }, 3000);
   }
 };
+

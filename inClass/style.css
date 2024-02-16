@@ -1,4 +1,11 @@
 body {
-    background-color: #59516E;
-    color: white;
+  background-image: url(./assets/body.jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: white;
+  height: 100vh;
+}
+
+.card {
+  min-width: 270px !important;
 }
