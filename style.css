@@ -6,6 +6,53 @@ body {
   height: 100vh;
 }
 
-.card {
-  min-width: 230px !important;
+.container-lg {
+  width: 90%;
+}
+
+.form-ul {
+  min-width: 301px !important;
+}
+
+/* .card {
+  min-width: 150px !important;
+} */
+
+@media only screen and (max-width: 768px) {
+  main.row {
+    max-height: 600px !important;
+    overflow: auto !important;
+  }
+  .main.row::-webkit-scrollbar {
+    width: 10px !important;
+    background-color: #f1f1f1 !important;
+    position: absolute !important;
+    right: 0 !important;
+    top: 0 !important;
+    transition: opacity 0.5s !important;
+    opacity: 0 !important;
+  }
+
+  .main.row::-webkit-scrollbar-thumb {
+    background-color: #888 !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s !important;
+  }
+
+  .main.row-thumb:hover {
+    background-color: #555 !important;
+  }
+
+  .main.row-track {
+    background-color: #f1f1f1 !important;
+    border-radius: 10px !important;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+@media only screen and (max-width: 300px) {
+  .container-lg {
+    display: none;
+  }
 }
